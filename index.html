@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Catch the Balls</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body {
+  background: black;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+}
+h2 {
+  margin-bottom: 10px;
+}
+.info {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+#game {
+  position: relative;
+  width: 400px;
+  height: 500px;
+  border: 3px solid white;
+  border-radius: 10px;
+  overflow: hidden;
+  background: gray;
+  box-shadow: 0 0 15px white;
+}
+#basket {
+  position: absolute;
+  bottom: 10px;
+  left: 180px;
+  width: 60px;
+  height: 30px;
+  background: red;
+  border-radius: 8px;
+  display: none;
+}
+.ball {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: lime;
+  border-radius: 50%;
+}
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+#overlay h3 {
+  margin-bottom: 15px;
+}
+#startBtn {
+  font-size: 20px;
+  padding: 10px 25px;
+}
+</style>
+</head>
+<body>
+<h2>Catch the Balls</h2>
+<div class="info">
+  <div id="score">Score: 0</div>
+  <div id="time">Time: 60</div>
+</div>
+<div id="game">
+  <div id="basket"></div>
+  <div id="overlay">
+    <button id="startBtn" class="btn btn-success">Start Game</button>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+let score=0,time=30,playing=false,moveLeft=false,moveRight=false,ballMaker,timer
+let basket=$("#basket"),game=$("#game")
+$(document).keydown(e=>{
+  if(e.key==="ArrowLeft")moveLeft=true
+  if(e.key==="ArrowRight")moveRight=true
+})
+$(document).keyup(e=>{
+  if(e.key==="ArrowLeft")moveLeft=false
+  if(e.key==="ArrowRight")moveRight=false
+})
+function moveBasket(){
+  let pos=basket.position().left
+  if(moveLeft&&pos>0)basket.css("left",pos-6)
+  if(moveRight&&pos<game.width()-basket.width())basket.css("left",pos+6)
+}
+function createBall(){
+  let ball=$("<div class='ball'></div>")
+  ball.css("left",Math.random()*(game.width()-20))
+  game.append(ball)
+  fall(ball)
+}
+function fall(ball){
+  let fallInterval=setInterval(function(){
+    if(!playing){ball.remove();clearInterval(fallInterval);return}
+    let top=parseInt(ball.css("top")||0)
+    if(top>game.height()-50){
+      let bx=basket.position().left,bl=ball.position().left
+      if(bl>bx-10&&bl<bx+basket.width()){
+        score++
+        $("#score").text("Score: "+score)
+      }
+      ball.remove()
+      clearInterval(fallInterval)
+    } else ball.css("top",top+5)
+  },30)
+}
+function startGame(){
+  score=0
+  time=30
+  playing=true
+  $("#score").text("Score: 0")
+  $("#time").text("Time: 30")
+  $("#overlay").hide()
+  basket.show()
+  ballMaker=setInterval(createBall,1000)
+  timer=setInterval(function(){
+    time--
+    $("#time").text("Time: "+time)
+    if(time<=0)endGame()
+  },1000)
+}
+function endGame(){
+  playing=false
+  clearInterval(ballMaker)
+  clearInterval(timer)
+  $(".ball").remove()
+  basket.hide()
+  $("#overlay").show().html("<h3>Game Over!</h3><p>Score: "+score+"</p><button id='startBtn' class='btn btn-success'>Play Again</button>")
+  $("#startBtn").click(()=>{startGame()})
+}
+setInterval(moveBasket,10)
+$("#startBtn").click(()=>{startGame()})
+</script>
+</body>
+</html>
